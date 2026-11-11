@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
         WindowCompat.getInsetsController(window, window.decorView)
             .isAppearanceLightStatusBars = false
         window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = android.graphics.Color.BLACK
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         setContent {
             GalleryTheme { GalleryApp() }
@@ -118,24 +118,38 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun GalleryTheme(content: @Composable () -> Unit) {
     val dark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    val colors = if (dark) {
+        darkColorScheme(
+            background = Color(0xFF11120F),
+            surface = Color(0xFF11120F),
+            onBackground = Color(0xFFF1F0E9),
+            onSurface = Color(0xFFF1F0E9),
+            primary = Color(0xFFF1F0E9),
+            onPrimary = Color(0xFF171813),
+            surfaceVariant = Color(0xFF22231F),
+            onSurfaceVariant = Color(0xFFA7A69D),
+            outline = Color(0xFF383932)
+        )
+    } else {
+        lightColorScheme(
+            background = Color(0xFFF4F3EE),
+            surface = Color(0xFFF4F3EE),
+            onBackground = Color(0xFF191A16),
+            onSurface = Color(0xFF191A16),
+            primary = Color(0xFF191A16),
+            onPrimary = Color(0xFFF4F3EE),
+            surfaceVariant = Color(0xFFE9E8E1),
+            onSurfaceVariant = Color(0xFF686960),
+            outline = Color(0xFFD6D5CD)
+        )
+    }
+
     MaterialTheme(
-        colorScheme = if (dark) darkColorScheme(
-            background = Color(0xFF090909),
-            surface = Color(0xFF090909),
-            onBackground = Color.White,
-            onSurface = Color.White,
-            primary = Color.White
-        ) else lightColorScheme(
-            background = Color(0xFFFAFAFA),
-            surface = Color(0xFFFAFAFA),
-            onBackground = Color(0xFF111111),
-            onSurface = Color(0xFF111111),
-            primary = Color(0xFF111111)
-        ),
+        colorScheme = colors,
         content = content
     )
 }
-
 @Composable
 private fun GalleryApp() {
     val context = LocalContext.current
@@ -152,9 +166,10 @@ val prefs = remember {
 
     SideEffect {
         context.findActivity()?.window?.let { window ->
-            WindowCompat.getInsetsController(window, view)
-                .isAppearanceLightStatusBars =
-                selectedIndex < 0 && statusBarBackground.luminance() > 0.5f
+            val controller = WindowCompat.getInsetsController(window, view)
+            val lightSystemBars = selectedIndex < 0 && statusBarBackground.luminance() > 0.5f
+            controller.isAppearanceLightStatusBars = lightSystemBars
+            controller.isAppearanceLightNavigationBars = lightSystemBars
         }
     }
     val thumbnailBounds = remember { mutableStateMapOf<Uri, Rect>() }
@@ -374,21 +389,48 @@ private fun makeEntries(photos: List<Photo>): List<GridEntry> =
 @Composable
 private fun PermissionScreen(onRequest: () -> Unit) {
     Column(
-        Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(28.dp),
+            .padding(horizontal = 32.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.Start
     ) {
-        Text("Photos", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
+        Text(
+            "YOUR LIBRARY",
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = 1.8.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.48f)
+        )
+        Spacer(Modifier.height(14.dp))
+        Text(
+            "Photos,\nkept together.",
+            fontSize = 32.sp,
+            lineHeight = 37.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = (-1.1).sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
         Spacer(Modifier.height(12.dp))
-        Text("Allow access to your photos to open your gallery.")
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onRequest) { Text("Allow access") }
+        Text(
+            "Allow access to view the images stored on this device.",
+            fontSize = 14.sp,
+            lineHeight = 21.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
+        )
+        Spacer(Modifier.height(28.dp))
+        Button(
+            onClick = onRequest,
+            shape = RoundedCornerShape(3.dp),
+            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 13.dp)
+        ) {
+            Text("Allow photo access", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        }
     }
 }
-
+@Suppress("UNUSED_PARAMETER")
 @Composable
 private fun PhotoGrid(
     photos: List<Photo>,
@@ -406,57 +448,139 @@ private fun PhotoGrid(
     onPhotoClick: (Photo) -> Unit
 ) {
     val context = LocalContext.current
-    val view = LocalView.current
-    val statusBarBackground = MaterialTheme.colorScheme.background
-val prefs = remember { context.getSharedPreferences("gallery_settings", Context.MODE_PRIVATE) }
-    var columns by remember { mutableIntStateOf(prefs.getInt("grid_columns", 3).coerceIn(2, 7)) }
-
-
+    val prefs = remember {
+        context.getSharedPreferences("gallery_settings", Context.MODE_PRIVATE)
+    }
+    var columns by remember {
+        mutableIntStateOf(prefs.getInt("grid_columns", 3).coerceIn(2, 7))
+    }
     val entries = remember(photos) { makeEntries(photos) }
+    val muted = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.48f)
 
     Column(
-        Modifier.fillMaxSize()
+        Modifier
+            .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 7.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 22.dp, end = 20.dp, top = 18.dp, bottom = 17.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-    Text(
-        "YOUR LIBRARY",
-        fontSize = 10.sp,
-        fontWeight = FontWeight.Medium,
-        letterSpacing = 2.sp,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.48f)
-    )
-    Text(
-        "Photos",
-        fontSize = 28.sp,
-        fontWeight = FontWeight.SemiBold,
-        letterSpacing = (-0.8).sp
-    )
-}
-            Spacer(Modifier.weight(1f))
-            TextButton(onClick = { onOrientationChange(!horizontal) }) {
-                Text(if (horizontal) "↕" else "↔", fontSize = 21.sp)
+                Text(
+                    "YOUR LIBRARY",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 1.8.sp,
+                    color = muted
+                )
+                Text(
+                    "Photos",
+                    fontSize = 31.sp,
+                    lineHeight = 36.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = (-1.1).sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
-            Text(
-                photos.size.toString(),
-                modifier = Modifier.padding(start = 8.dp),
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
-            )
+
+            Spacer(Modifier.weight(1f))
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    photos.size.toString(),
+                    fontSize = 17.sp,
+                    lineHeight = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    "ITEMS",
+                    fontSize = 9.sp,
+                    letterSpacing = 1.3.sp,
+                    color = muted
+                )
+            }
+
+            Spacer(Modifier.width(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.055f))
+                    .clickable { onOrientationChange(!horizontal) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    if (horizontal) "↔" else "↕",
+                    fontSize = 19.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.78f)
+                )
+            }
         }
 
         when {
-            loading -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+            loading -> {
+                Box(
+                    Modifier.weight(1f).fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 1.5.dp
+                        )
+                        Text(
+                            "Loading library",
+                            fontSize = 12.sp,
+                            color = muted
+                        )
+                    }
+                }
             }
-            photos.isEmpty() -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("No photos found")
+
+            photos.isEmpty() -> {
+                Box(
+                    Modifier.weight(1f).fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 34.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            "YOUR LIBRARY",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 1.7.sp,
+                            color = muted
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            "No photos yet",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = (-0.5).sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.height(7.dp))
+                        Text(
+                            "Images saved on this device will appear here.",
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f)
+                        )
+                    }
+                }
             }
+
             else -> {
                 val gridModifier = Modifier
                     .weight(1f)
@@ -466,17 +590,21 @@ val prefs = remember { context.getSharedPreferences("gallery_settings", Context.
                             var pinchAccumulator = 1f
                             awaitFirstDown(requireUnconsumed = false)
                             var previousDistance = 0f
+
                             do {
                                 val event = awaitPointerEvent()
                                 val pressed = event.changes.filter { it.pressed }
+
                                 if (pressed.size >= 2) {
                                     val a = pressed[0].position
                                     val b = pressed[1].position
                                     val dx = a.x - b.x
                                     val dy = a.y - b.y
                                     val distance = sqrt(dx * dx + dy * dy)
+
                                     if (previousDistance > 0f) {
                                         pinchAccumulator *= distance / previousDistance
+
                                         if (pinchAccumulator > 1.35f) {
                                             columns = (columns - 1).coerceAtLeast(2)
                                             prefs.edit().putInt("grid_columns", columns).apply()
@@ -487,9 +615,12 @@ val prefs = remember { context.getSharedPreferences("gallery_settings", Context.
                                             pinchAccumulator = 1f
                                         }
                                     }
+
                                     previousDistance = distance
                                     pressed.forEach { it.consume() }
-                                } else previousDistance = 0f
+                                } else {
+                                    previousDistance = 0f
+                                }
                             } while (event.changes.any { it.pressed })
                         }
                     }
@@ -498,20 +629,35 @@ val prefs = remember { context.getSharedPreferences("gallery_settings", Context.
                     items(
                         items = entries,
                         key = { it.id },
-                        span = { if (it.photo == null) GridItemSpan(maxLineSpan) else GridItemSpan(1) },
+                        span = {
+                            if (it.photo == null) GridItemSpan(maxLineSpan) else GridItemSpan(1)
+                        },
                         contentType = { if (it.photo == null) "date" else "photo" }
                     ) { entry ->
                         val photo = entry.photo
+
                         if (photo == null) {
-                            Text(
-                                entry.label ?: "",
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(start = 8.dp, top = 8.dp, bottom = 6.dp),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium,
-                                letterSpacing = 1.1.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp, end = 8.dp, top = 17.dp, bottom = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    (entry.label ?: "").uppercase(Locale.getDefault()),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    letterSpacing = 1.15.sp,
+                                    color = muted
+                                )
+                                Spacer(Modifier.width(13.dp))
+                                Box(
+                                    Modifier
+                                        .weight(1f)
+                                        .height(1.dp)
+                                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f))
+                                )
+                            }
                         } else {
                             var itemBounds by remember(photo.uri) {
                                 mutableStateOf(Rect.Zero)
@@ -524,61 +670,27 @@ val prefs = remember { context.getSharedPreferences("gallery_settings", Context.
                                     .crossfade(false)
                                     .build()
                             }
+
                             AsyncImage(
                                 model = request,
-                                contentDescription = null,
+                                contentDescription = "Photo",
                                 onSuccess = { onPhotoReady(photo) },
                                 contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .aspectRatio(1f)
-                                    .graphicsLayer { alpha = if (photo.uri == hiddenPhotoUri) 0f else 1f }
+                                    .graphicsLayer {
+                                        alpha = if (photo.uri == hiddenPhotoUri) 0f else 1f
+                                    }
                                     .onGloballyPositioned {
                                         itemBounds = it.boundsInRoot()
                                         onPhotoBounds(photo, itemBounds)
                                     }
-                                    .pointerInput(photo.uri, itemBounds) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        val longPress = awaitLongPressOrCancellation(down.id)
-
-        if (longPress == null) {
-            val lastChange = currentEvent.changes.firstOrNull {
-                it.id == down.id
-            }
-            if (lastChange != null && !lastChange.pressed) {
-                onPhotoClick(photo)
-            }
-        } else {
-            longPress.consume()
-            onContextMenuStart(
-                photo,
-                itemBounds.topLeft + longPress.position
-            )
-
-            var finished = false
-            while (!finished) {
-                val event = awaitPointerEvent(PointerEventPass.Initial)
-                val change = event.changes.firstOrNull {
-                    it.id == down.id
-                }
-
-                if (change == null) {
-                    onContextMenuCancel()
-                    finished = true
-                } else if (change.pressed) {
-                    change.consume()
-                    onContextMenuMove(
-                        photo,
-                        itemBounds.topLeft + change.position
-                    )
-                } else {
-                    onContextMenuEnd(photo)
-                    finished = true
-                }
-            }
-        }
-    }
-}
+                                    .pointerInput(photo.uri) {
+                                        detectTapGestures(
+                                            onTap = { onPhotoClick(photo) }
+                                        )
+                                    }
                             )
                         }
                     }
@@ -588,16 +700,15 @@ val prefs = remember { context.getSharedPreferences("gallery_settings", Context.
                     columns = GridCells.Fixed(columns),
                     state = gridState,
                     modifier = gridModifier,
-                    contentPadding = PaddingValues(3.dp),
-                    horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                    contentPadding = PaddingValues(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                     content = gridContent
                 )
             }
         }
     }
 }
-
 @Composable
 private fun PhotoViewer(
     photos: List<Photo>,
@@ -631,7 +742,8 @@ private fun PhotoViewer(
     ).value
 
     BoxWithConstraints(
-        Modifier.fillMaxSize()
+        Modifier
+            .fillMaxSize()
             .background(if (closing) Color.Transparent else Color.Black)
             .graphicsLayer { alpha = viewerAlpha },
         contentAlignment = Alignment.TopStart
@@ -694,38 +806,51 @@ private fun PhotoViewer(
                         translationX = left
                         translationY = top
                         clip = true
-                        shape = RoundedCornerShape(2.dp)
+                        shape = RoundedCornerShape(1.dp)
                     }
             )
         }
 
-        Box(
-            Modifier.align(Alignment.TopStart)
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(start = 10.dp, top = 4.dp)
-                .size(44.dp)
-                .graphicsLayer { alpha = controlsAlpha }
-                .clip(RoundedCornerShape(50))
-                .background(Color.Black.copy(alpha = 0.35f))
-                .clickable(enabled = controlsAlpha >= 0.99f) {
-                    onClose(currentPhoto)
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Text("‹", color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.Light)
-        }
-
-        Text(
-            "${currentPage + 1} / ${photos.size}",
-            modifier = Modifier.align(Alignment.BottomCenter)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = 10.dp)
+                .padding(horizontal = 18.dp, vertical = 7.dp)
                 .graphicsLayer { alpha = controlsAlpha },
-            color = Color.White.copy(alpha = 0.65f),
-            fontSize = 12.sp
-        )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.10f))
+                    .clickable(enabled = controlsAlpha >= 0.99f) {
+                        onClose(currentPhoto)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "‹",
+                    color = Color.White,
+                    fontSize = 29.sp,
+                    fontWeight = FontWeight.Light
+                )
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            Text(
+                "${currentPage + 1} / ${photos.size}",
+                color = Color.White.copy(alpha = 0.76f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 0.6.sp
+            )
+        }
     }
-}@Composable
+}
+@Composable
 private fun ZoomablePhoto(photo: Photo) {
     var scale by remember(photo.uri) { mutableFloatStateOf(1f) }
     var pan by remember(photo.uri) { mutableStateOf(Offset.Zero) }
@@ -1032,6 +1157,7 @@ private fun adaptiveMenuPositions(
     var dx = width / 2f - center.x
     var dy = height / 2f - center.y
     val length = kotlin.math.sqrt(dx * dx + dy * dy)
+
     if (length < 2f) {
         dx = 0f
         dy = -1f
@@ -1041,20 +1167,30 @@ private fun adaptiveMenuPositions(
     }
 
     val anchor = Offset(
-        (center.x + dx * 112f * dp).coerceIn(margin, (width - margin).coerceAtLeast(margin)),
-        (center.y + dy * 112f * dp).coerceIn(margin, (height - margin).coerceAtLeast(margin))
+        (center.x + dx * 112f * dp).coerceIn(
+            margin,
+            (width - margin).coerceAtLeast(margin)
+        ),
+        (center.y + dy * 112f * dp).coerceIn(
+            margin,
+            (height - margin).coerceAtLeast(margin)
+        )
     )
 
     fun point(x: Float, y: Float) = Offset(
-        (anchor.x + x * dp).coerceIn(38f * dp, (width - 38f * dp).coerceAtLeast(38f * dp)),
-        (anchor.y + y * dp).coerceIn(38f * dp, (height - 38f * dp).coerceAtLeast(38f * dp))
+        (anchor.x + x * dp).coerceIn(
+            38f * dp,
+            (width - 38f * dp).coerceAtLeast(38f * dp)
+        ),
+        (anchor.y + y * dp).coerceIn(
+            38f * dp,
+            (height - 38f * dp).coerceAtLeast(38f * dp)
+        )
     )
 
     return mapOf(
-        "Share" to point(-38f, -38f),
-        "Like" to point(38f, -38f),
-        "Crop" to point(-38f, 38f),
-        "Delete" to point(38f, 38f)
+        "Share" to point(-38f, 0f),
+        "Like" to point(38f, 0f)
     )
 }
 @Composable
@@ -1087,82 +1223,47 @@ private fun RadialMenuItem(
     dp: Float
 ) {
     val scale = androidx.compose.animation.core.animateFloatAsState(
-        targetValue = if (selected) 1.10f else 1f,
+        targetValue = if (selected) 1.08f else 1f,
         animationSpec = androidx.compose.animation.core.spring(
-            dampingRatio = 0.72f,
+            dampingRatio = 0.78f,
             stiffness = 430f
         ),
-        label = "glassTileScale"
+        label = "menuItemScale"
     ).value
 
-    val shape = RoundedCornerShape(23.dp)
     val targetOffset = IntOffset(
-        (position.x - 35f * dp).roundToInt(),
-        (position.y - 35f * dp).roundToInt()
+        (position.x - 29f * dp).roundToInt(),
+        (position.y - 29f * dp).roundToInt()
     )
     val animatedOffset = animateIntOffsetAsState(
         targetValue = targetOffset,
         animationSpec = androidx.compose.animation.core.spring(
-            dampingRatio = 0.78f,
+            dampingRatio = 0.8f,
             stiffness = 500f
         ),
-        label = "glassTilePosition"
+        label = "menuItemPosition"
     ).value
-
-    val danger = label == "Delete"
-    val accent = if (danger) Color(0xFFFF625C) else Color(0xFFB9D8FF)
-
-    val colors = when {
-        selected && danger -> listOf(
-            Color(0xFF693B40),
-            Color(0xFF34252B),
-            Color(0xFF191B22)
-        )
-        selected -> listOf(
-            Color(0xFF53677D),
-            Color(0xFF303D4D),
-            Color(0xFF1B222D)
-        )
-        else -> listOf(
-            Color(0xFF46515F),
-            Color(0xFF292F39),
-            Color(0xFF171B22)
-        )
-    }
 
     Box(
         modifier = Modifier
             .offset { animatedOffset }
-            .size(70.dp)
+            .size(58.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
-                shadowElevation = if (selected) 22f else 11f
-                this.shape = RoundedCornerShape(23.dp)
+                shadowElevation = if (selected) 14f else 6f
+                shape = CircleShape
                 clip = false
             }
-            .clip(shape)
-            .background(
-                androidx.compose.ui.graphics.Brush.linearGradient(colors)
-            )
+            .clip(CircleShape)
+            .background(Color(0xFF242521))
             .border(
                 width = 1.dp,
-                color = Color.White.copy(
-                    alpha = if (selected) 0.52f else 0.22f
-                ),
-                shape = shape
+                color = Color.White.copy(alpha = if (selected) 0.34f else 0.15f),
+                shape = CircleShape
             ),
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 1.dp)
-                .fillMaxWidth(0.72f)
-                .height(1.dp)
-                .background(Color.White.copy(alpha = 0.32f))
-        )
-
         if (selected) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -1171,7 +1272,7 @@ private fun RadialMenuItem(
                 RadialMenuGlyph(
                     label = label,
                     selected = true,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text = label,
@@ -1184,18 +1285,7 @@ private fun RadialMenuItem(
             RadialMenuGlyph(
                 label = label,
                 selected = false,
-                modifier = Modifier.size(25.dp)
-            )
-        }
-
-        if (selected) {
-            Box(
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 4.dp)
-                    .size(4.dp)
-                    .clip(CircleShape)
-                    .background(accent)
+                modifier = Modifier.size(22.dp)
             )
         }
     }
