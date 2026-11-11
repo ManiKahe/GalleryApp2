@@ -423,7 +423,21 @@ val prefs = remember { context.getSharedPreferences("gallery_settings", Context.
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("PHOTOS", fontSize = 19.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            Column {
+    Text(
+        "YOUR LIBRARY",
+        fontSize = 10.sp,
+        fontWeight = FontWeight.Medium,
+        letterSpacing = 2.sp,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.48f)
+    )
+    Text(
+        "Photos",
+        fontSize = 28.sp,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = (-0.8).sp
+    )
+}
             Spacer(Modifier.weight(1f))
             TextButton(onClick = { onOrientationChange(!horizontal) }) {
                 Text(if (horizontal) "↕" else "↔", fontSize = 21.sp)
@@ -1259,6 +1273,8 @@ private fun RadialMenuGlyph(
         }
     }
 }
+
+
 
 
 
