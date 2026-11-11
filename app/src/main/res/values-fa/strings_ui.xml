@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_tab_library">کتابخانه</string>
+    <string name="ui_tab_search">جستجو</string>
+    <string name="ui_select">انتخاب</string>
+    <string name="ui_select_items">انتخاب موارد</string>
+    <string name="ui_share">اشتراک‌گذاری</string>
+    <string name="ui_settings">تنظیمات</string>
+    <string name="ui_grid">شبکه</string>
+    <string name="ui_utilities">ابزارها</string>
+    <string name="ui_recently_deleted">اخیراً حذف‌شده</string>
+    <string name="ui_delete_title">حذف %1$d مورد؟</string>
+    <string name="ui_delete_message">این موارد به «اخیراً حذف‌شده» منتقل می‌شوند.</string>
+</resources>
