@@ -1,0 +1,82 @@
+﻿e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/albums/AlbumsScreen.kt:17:37 Unresolved reference: modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/albums/AlbumsScreen.kt:56:24 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/albums/AlbumsScreen.kt:59:24 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/albums/AlbumsScreen.kt:61:28 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/albums/AlbumsScreen.kt:101:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/albums/AlbumsScreen.kt:104:21 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/albums/AlbumsScreen.kt:108:28 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/albums/AlbumsScreen.kt:114:28 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/albums/AlbumsScreen.kt:120:36 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/albums/AlbumsScreen.kt:130:36 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/artists/ArtistsScreen.kt:11:37 Unresolved reference: modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/artists/ArtistsScreen.kt:43:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/artists/ArtistsScreen.kt:50:32 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/artists/ArtistsScreen.kt:82:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:17:37 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:40:15 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:40:26 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:50:16 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:51:16 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:72:24 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:93:62 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:93:73 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:106:28 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:124:15 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:124:26 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:134:13 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:140:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:141:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:169:9 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/components/MusicComponents.kt:177:24 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:15:37 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:127:17 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:131:17 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:144:17 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:149:25 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:154:98 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:155:98 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:160:25 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:165:88 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:166:96 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:179:37 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:184:44 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:224:37 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:229:44 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:259:15 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:259:26 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:263:13 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/home/MusicHomeScreen.kt:267:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:15:37 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:66:17 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:72:13 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:78:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:80:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:96:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:104:28 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:106:17 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:111:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:113:17 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:126:60 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:130:32 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:135:25 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:139:56 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:153:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:172:28 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/nowplaying/NowPlayingScreen.kt:185:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/playlists/PlaylistsScreen.kt:12:37 Unresolved reference: modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/playlists/PlaylistsScreen.kt:53:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/playlists/PlaylistsScreen.kt:58:36 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/playlists/PlaylistsScreen.kt:66:32 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/playlists/PlaylistsScreen.kt:131:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/songs/SongsScreen.kt:11:37 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/music/ui/songs/SongsScreen.kt:55:20 Unresolved reference: Modifier
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/ui/shell/MainShell.kt:119:21 Cannot find a parameter with this name: showBack
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/ui/shell/MainShell.kt:120:21 Cannot find a parameter with this name: gridState
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/ui/shell/MainShell.kt:121:21 Cannot find a parameter with this name: bottomInset
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/ui/shell/MainShell.kt:122:21 Cannot find a parameter with this name: onSelectionModeChange
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/ui/shell/MainShell.kt:122:59 Unresolved reference: it
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/ui/shell/MainShell.kt:123:21 Cannot find a parameter with this name: onOpenSettings
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/ui/shell/MainShell.kt:132:21 Cannot find a parameter with this name: bottomInset
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/ui/shell/MainShell.kt:133:21 Cannot find a parameter with this name: onOpenHidden
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/ui/shell/MainShell.kt:134:21 Cannot find a parameter with this name: onOpenDeleted
+e: file:///C:/portfoilo/GalleryApp/app/src/main/java/com/gallery/app/ui/shell/MainShell.kt:134:21 No value passed for parameter 'onNavigateBack'

@@ -1,0 +1,668 @@
+﻿package com.gallery.app
+
+import android.Manifest
+import android.content.ContentUris
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.provider.MediaStore
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.size.Precision
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import kotlin.math.sqrt
+
+data class Photo(
+    val uri: Uri,
+    val width: Int,
+    val height: Int,
+    val date: Long
+)
+
+private data class GridEntry(
+    val photo: Photo? = null,
+    val label: String? = null,
+    val id: String
+)
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.getInsetsController(window, window.decorView)
+            .isAppearanceLightStatusBars = false
+        window.statusBarColor = android.graphics.Color.BLACK
+        window.navigationBarColor = android.graphics.Color.BLACK
+
+        setContent {
+            GalleryTheme { GalleryApp() }
+        }
+    }
+}
+
+@Composable
+private fun GalleryTheme(content: @Composable () -> Unit) {
+    val dark = androidx.compose.foundation.isSystemInDarkTheme()
+    MaterialTheme(
+        colorScheme = if (dark) darkColorScheme(
+            background = Color(0xFF090909),
+            surface = Color(0xFF090909),
+            onBackground = Color.White,
+            onSurface = Color.White,
+            primary = Color.White
+        ) else lightColorScheme(
+            background = Color(0xFFFAFAFA),
+            surface = Color(0xFFFAFAFA),
+            onBackground = Color(0xFF111111),
+            onSurface = Color(0xFF111111),
+            primary = Color(0xFF111111)
+        ),
+        content = content
+    )
+}
+
+@Composable
+private fun GalleryApp() {
+    val context = LocalContext.current
+    val prefs = remember {
+        context.getSharedPreferences("gallery_settings", Context.MODE_PRIVATE)
+    }
+
+    var permissionGranted by remember { mutableStateOf(hasImagePermission(context)) }
+    var photos by remember { mutableStateOf<List<Photo>>(emptyList()) }
+    var loading by remember { mutableStateOf(false) }
+    var selectedIndex by remember { mutableIntStateOf(-1) }
+    var transitionRunning by remember { mutableStateOf(false) }
+    var horizontal by remember {
+        mutableStateOf(prefs.getBoolean("horizontal_scroll", false))
+    }
+
+    val gridState = rememberLazyGridState()
+    val scope = rememberCoroutineScope()
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        permissionGranted = hasImagePermission(context)
+    }
+
+    LaunchedEffect(permissionGranted) {
+        if (permissionGranted) {
+            loading = true
+            photos = withContext(Dispatchers.IO) { loadPhotos(context) }
+            loading = false
+        }
+    }
+
+    if (!permissionGranted) {
+        PermissionScreen {
+            permissionLauncher.launch(imagePermissions())
+        }
+        return
+    }
+
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        PhotoGrid(
+            photos = photos,
+            loading = loading,
+            horizontal = horizontal,
+            gridState = gridState,
+            onOrientationChange = {
+                horizontal = it
+                prefs.edit().putBoolean("horizontal_scroll", it).apply()
+            },
+            onPhotoClick = { selectedIndex = photos.indexOf(it) }
+        )
+
+        if (selectedIndex >= 0 && photos.isNotEmpty()) {
+            PhotoViewer(
+                photos = photos,
+                initialPage = selectedIndex,
+                horizontal = horizontal,
+                onClose = { currentPhoto ->
+                    val target = photos.indexOf(currentPhoto)
+                    if (target >= 0) {
+                        scope.launch {
+                            val entries = makeEntries(photos)
+                            val entryIndex = entries.indexOfFirst {
+                                it.photo?.uri == currentPhoto.uri
+                            }
+                            if (entryIndex >= 0) {
+                                val centerOffset = -(gridState.layoutInfo.viewportSize.height / 2)
+                                gridState.scrollToItem(entryIndex, centerOffset)
+                            }
+                        }
+                    }
+                    selectedIndex = -1
+                }
+            )
+        }
+    }
+}
+
+private fun hasImagePermission(context: Context): Boolean {
+    fun granted(permission: String) =
+        ContextCompat.checkSelfPermission(context, permission) ==
+            PackageManager.PERMISSION_GRANTED
+
+    return when {
+        Build.VERSION.SDK_INT >= 34 ->
+            granted(Manifest.permission.READ_MEDIA_IMAGES) ||
+                granted(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+        Build.VERSION.SDK_INT >= 33 ->
+            granted(Manifest.permission.READ_MEDIA_IMAGES)
+        else -> granted(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
+}
+
+private fun imagePermissions(): Array<String> = when {
+    Build.VERSION.SDK_INT >= 34 -> arrayOf(
+        Manifest.permission.READ_MEDIA_IMAGES,
+        Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+    )
+    Build.VERSION.SDK_INT >= 33 -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+    else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+}
+
+private fun loadPhotos(context: Context): List<Photo> {
+    val result = mutableListOf<Photo>()
+    val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    val projection = arrayOf(
+        MediaStore.Images.Media._ID,
+        MediaStore.Images.Media.WIDTH,
+        MediaStore.Images.Media.HEIGHT,
+        MediaStore.Images.Media.DATE_TAKEN,
+        MediaStore.Images.Media.DATE_ADDED
+    )
+
+    context.contentResolver.query(
+        collection, projection, null, null,
+        "${MediaStore.Images.Media.DATE_ADDED} DESC"
+    )?.use { cursor ->
+        val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+        val widthCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.WIDTH)
+        val heightCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT)
+        val takenCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
+        val addedCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
+
+        while (cursor.moveToNext()) {
+            val taken = cursor.getLong(takenCol)
+            val added = cursor.getLong(addedCol)
+            result.add(
+                Photo(
+                    ContentUris.withAppendedId(collection, cursor.getLong(idCol)),
+                    cursor.getInt(widthCol),
+                    cursor.getInt(heightCol),
+                    if (taken > 0) taken else added * 1000L
+                )
+            )
+        }
+    }
+    return result
+}
+
+private fun dateLabel(timestamp: Long): String {
+    val today = Calendar.getInstance()
+    val day = Calendar.getInstance().apply { timeInMillis = timestamp }
+
+    if (today.get(Calendar.YEAR) == day.get(Calendar.YEAR) &&
+        today.get(Calendar.DAY_OF_YEAR) == day.get(Calendar.DAY_OF_YEAR)
+    ) return "TODAY"
+
+    today.add(Calendar.DAY_OF_YEAR, -1)
+    if (today.get(Calendar.YEAR) == day.get(Calendar.YEAR) &&
+        today.get(Calendar.DAY_OF_YEAR) == day.get(Calendar.DAY_OF_YEAR)
+    ) return "YESTERDAY"
+
+    return SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
+        .format(Date(timestamp))
+}
+
+private fun makeEntries(photos: List<Photo>): List<GridEntry> =
+    buildList {
+        photos.groupBy { dateLabel(it.date) }.forEach { (label, group) ->
+            add(GridEntry(label = label, id = "header_$label"))
+            group.forEach { add(GridEntry(photo = it, id = it.uri.toString())) }
+        }
+    }
+
+@Composable
+private fun PermissionScreen(onRequest: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .padding(28.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Photos", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(12.dp))
+        Text("Allow access to your photos to open your gallery.")
+        Spacer(Modifier.height(24.dp))
+        Button(onClick = onRequest) { Text("Allow access") }
+    }
+}
+
+@Composable
+private fun PhotoGrid(
+    photos: List<Photo>,
+    loading: Boolean,
+    horizontal: Boolean,
+    gridState: LazyGridState,
+    onOrientationChange: (Boolean) -> Unit,
+    onPhotoClick: (Photo) -> Unit
+) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("gallery_settings", Context.MODE_PRIVATE) }
+    var columns by remember { mutableIntStateOf(prefs.getInt("grid_columns", 3).coerceIn(2, 7)) }
+    var pinchAccumulator by remember { mutableFloatStateOf(1f) }
+
+    val entries = remember(photos) { makeEntries(photos) }
+
+    Column(
+        Modifier.fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("PHOTOS", fontSize = 19.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            Spacer(Modifier.weight(1f))
+            TextButton(onClick = { onOrientationChange(!horizontal) }) {
+                Text(if (horizontal) "↕" else "↔", fontSize = 21.sp)
+            }
+            Text(
+                photos.size.toString(),
+                modifier = Modifier.padding(start = 8.dp),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+            )
+        }
+
+        when {
+            loading -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            photos.isEmpty() -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text("No photos found")
+            }
+            else -> {
+                val gridModifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = false)
+                            var previousDistance = 0f
+                            do {
+                                val event = awaitPointerEvent()
+                                val pressed = event.changes.filter { it.pressed }
+                                if (pressed.size >= 2) {
+                                    val a = pressed[0].position
+                                    val b = pressed[1].position
+                                    val dx = a.x - b.x
+                                    val dy = a.y - b.y
+                                    val distance = sqrt(dx * dx + dy * dy)
+                                    if (previousDistance > 0f) {
+                                        pinchAccumulator *= distance / previousDistance
+                                        if (pinchAccumulator > 1.35f) {
+                                            columns = (columns - 1).coerceAtLeast(2)
+                                            prefs.edit().putInt("grid_columns", columns).apply()
+                                            pinchAccumulator = 1f
+                                        } else if (pinchAccumulator < 0.74f) {
+                                            columns = (columns + 1).coerceAtMost(7)
+                                            prefs.edit().putInt("grid_columns", columns).apply()
+                                            pinchAccumulator = 1f
+                                        }
+                                    }
+                                    previousDistance = distance
+                                    pressed.forEach { it.consume() }
+                                } else previousDistance = 0f
+                            } while (event.changes.any { it.pressed })
+                        }
+                    }
+
+                val gridContent: androidx.compose.foundation.lazy.grid.LazyGridScope.() -> Unit = {
+                    items(
+                        items = entries,
+                        key = { it.id },
+                        span = { if (it.photo == null) GridItemSpan(maxLineSpan) else GridItemSpan(1) },
+                        contentType = { if (it.photo == null) "date" else "photo" }
+                    ) { entry ->
+                        val photo = entry.photo
+                        if (photo == null) {
+                            Text(
+                                entry.label ?: "",
+                                modifier = Modifier.fillMaxWidth()
+                                    .padding(start = 8.dp, top = 15.dp, bottom = 6.dp),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 1.1.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.42f)
+                            )
+                        } else {
+                            val request = remember(photo.uri) {
+                                ImageRequest.Builder(context)
+                                    .data(photo.uri)
+                                    .size(256, 256)
+                                    .precision(Precision.INEXACT)
+                                    .crossfade(false)
+                                    .build()
+                            }
+                            AsyncImage(
+                                model = request,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxWidth()
+                                    .aspectRatio(1f)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .clickable { onPhotoClick(photo) }
+                            )
+                        }
+                    }
+                }
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(columns),
+                    state = gridState,
+                    modifier = gridModifier,
+                    contentPadding = PaddingValues(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                    content = gridContent
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PhotoViewer(
+    photos: List<Photo>,
+    initialPage: Int,
+    horizontal: Boolean,
+    onClose: (Photo) -> Unit
+) {
+    val horizontalState = rememberPagerState(initialPage = initialPage, pageCount = { photos.size })
+    val verticalState = rememberPagerState(initialPage = initialPage, pageCount = { photos.size })
+    val currentPage = if (horizontal) horizontalState.currentPage else verticalState.currentPage
+
+    BackHandler {
+        onClose(photos[currentPage])
+    }
+
+    Box(Modifier.fillMaxSize().background(Color.Black)) {
+        if (horizontal) {
+            HorizontalPager(
+                state = horizontalState,
+                modifier = Modifier.fillMaxSize(),
+                beyondViewportPageCount = 0
+            ) { page ->
+                ZoomablePhoto(photos[page])
+            }
+        } else {
+            VerticalPager(
+                state = verticalState,
+                modifier = Modifier.fillMaxSize(),
+                beyondViewportPageCount = 0
+            ) { page ->
+                ZoomablePhoto(photos[page])
+            }
+        }
+
+        Box(
+            Modifier.align(Alignment.TopStart)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(start = 10.dp, top = 4.dp)
+                .size(44.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color.Black.copy(alpha = 0.35f))
+                .clickable { onClose(photos[currentPage]) },
+            contentAlignment = Alignment.Center
+        ) {
+            Text("‹", color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.Light)
+        }
+
+        Text(
+            "${currentPage + 1} / ${photos.size}",
+            modifier = Modifier.align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = 10.dp),
+            color = Color.White.copy(alpha = 0.65f),
+            fontSize = 12.sp
+        )
+    }
+}
+@Composable
+private fun ZoomablePhoto(photo: Photo) {
+    var scale by remember(photo.uri) { mutableFloatStateOf(1f) }
+    var pan by remember(photo.uri) { mutableStateOf(Offset.Zero) }
+    var resetVersion by remember(photo.uri) { mutableIntStateOf(0) }
+    var interacting by remember(photo.uri) { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    BoxWithConstraints(
+        Modifier.fillMaxSize().background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        val viewWidth = with(density) { maxWidth.toPx() }
+        val viewHeight = with(density) { maxHeight.toPx() }
+
+        val imageWidth = photo.width.coerceAtLeast(1).toFloat()
+        val imageHeight = photo.height.coerceAtLeast(1).toFloat()
+        val fit = minOf(viewWidth / imageWidth, viewHeight / imageHeight)
+        val baseWidth = imageWidth * fit
+        val baseHeight = imageHeight * fit
+        val maxZoom = 4f
+
+        fun boundedPan(value: Offset, zoom: Float): Offset {
+            val limitX = ((baseWidth * zoom - viewWidth) / 2f).coerceAtLeast(0f)
+            val limitY = ((baseHeight * zoom - viewHeight) / 2f).coerceAtLeast(0f)
+            return Offset(
+                value.x.coerceIn(-limitX, limitX),
+                value.y.coerceIn(-limitY, limitY)
+            )
+        }
+
+        LaunchedEffect(resetVersion) {
+            delay(1500)
+            if (!interacting && scale > 1f) {
+                val startScale = scale
+                val startPan = pan
+
+                androidx.compose.animation.core.animate(
+                    initialValue = 0f,
+                    targetValue = 1f,
+                    animationSpec = androidx.compose.animation.core.spring(
+                        dampingRatio = 0.78f,
+                        stiffness = 180f
+                    )
+                ) { value, _ ->
+                    scale = startScale + (1f - startScale) * value
+                    pan = startPan * (1f - value)
+                }
+
+                scale = 1f
+                pan = Offset.Zero
+            }
+        }
+
+        AsyncImage(
+            model = remember(photo.uri) {
+                ImageRequest.Builder(context)
+                    .data(photo.uri)
+                    .size(
+                        photo.width.coerceAtMost(3072).coerceAtLeast(1),
+                        photo.height.coerceAtMost(3072).coerceAtLeast(1)
+                    )
+                    .precision(Precision.INEXACT)
+                    .crossfade(false)
+                    .build()
+            },
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxSize()
+                .pointerInput(photo.uri) {
+                    detectTapGestures(
+                        onDoubleTap = {
+                            scope.launch {
+                                resetVersion++
+                                val startScale = scale
+                                val targetScale = if (scale > 1.05f) 1f else 2.5f
+                                val startPan = pan
+
+                                androidx.compose.animation.core.animate(
+                                    initialValue = 0f,
+                                    targetValue = 1f,
+                                    animationSpec = androidx.compose.animation.core.spring(
+                                        dampingRatio = 0.82f,
+                                        stiffness = 260f
+                                    )
+                                ) { value, _ ->
+                                    scale = startScale + (targetScale - startScale) * value
+                                    pan = boundedPan(startPan * (1f - value), scale)
+                                }
+
+                                scale = targetScale
+                                if (targetScale == 1f) pan = Offset.Zero
+                                resetVersion++
+                            }
+                        }
+                    )
+                }
+                .pointerInput(photo.uri, viewWidth, viewHeight) {
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false)
+                        interacting = true
+                        resetVersion++
+
+                        var hadMultiTouch = false
+
+                        do {
+                            val event = awaitPointerEvent()
+                            val pressed = event.changes.filter { it.pressed }
+
+                            if (pressed.size >= 2) {
+                                hadMultiTouch = true
+                                val a = pressed[0]
+                                val b = pressed[1]
+
+                                val dx = a.position.x - b.position.x
+                                val dy = a.position.y - b.position.y
+                                val oldDx = a.previousPosition.x - b.previousPosition.x
+                                val oldDy = a.previousPosition.y - b.previousPosition.y
+
+                                val distance = sqrt(dx * dx + dy * dy)
+                                val oldDistance = sqrt(oldDx * oldDx + oldDy * oldDy)
+
+                                val oldScale = scale
+                                if (oldDistance > 0f) {
+                                    scale = (scale * distance / oldDistance).coerceIn(1f, maxZoom)
+                                }
+
+                                val nowCenter = Offset(
+                                    (a.position.x + b.position.x) / 2f,
+                                    (a.position.y + b.position.y) / 2f
+                                )
+                                val oldCenter = Offset(
+                                    (a.previousPosition.x + b.previousPosition.x) / 2f,
+                                    (a.previousPosition.y + b.previousPosition.y) / 2f
+                                )
+
+                                val zoomRatio = scale / oldScale
+                                val focal = nowCenter - Offset(viewWidth / 2f, viewHeight / 2f)
+                                val zoomPan = (pan - focal) * zoomRatio + focal
+                                pan = boundedPan(zoomPan + nowCenter - oldCenter, scale)
+
+                                pressed.forEach { it.consume() }
+                            } else if (pressed.size == 1 && scale > 1f) {
+                                val change = pressed.first()
+                                pan = boundedPan(
+                                    pan + change.position - change.previousPosition,
+                                    scale
+                                )
+                                change.consume()
+                            }
+                        } while (event.changes.any { it.pressed })
+
+                        interacting = false
+                        if (hadMultiTouch && scale > 1f) {
+                            resetVersion++
+                        }
+                    }
+                }
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = pan.x
+                    translationY = pan.y
+                }
+        )
+    }
+}
+
+
