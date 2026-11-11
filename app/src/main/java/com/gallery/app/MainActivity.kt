@@ -420,7 +420,7 @@ val prefs = remember { context.getSharedPreferences("gallery_settings", Context.
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("PHOTOS", fontSize = 19.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
@@ -492,11 +492,11 @@ val prefs = remember { context.getSharedPreferences("gallery_settings", Context.
                             Text(
                                 entry.label ?: "",
                                 modifier = Modifier.fillMaxWidth()
-                                    .padding(start = 8.dp, top = 15.dp, bottom = 6.dp),
-                                fontSize = 10.sp,
+                                    .padding(start = 8.dp, top = 8.dp, bottom = 6.dp),
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium,
                                 letterSpacing = 1.1.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.42f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
                             )
                         } else {
                             var itemBounds by remember(photo.uri) {
@@ -1259,6 +1259,7 @@ private fun RadialMenuGlyph(
         }
     }
 }
+
 
 
 
